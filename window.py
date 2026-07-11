@@ -94,13 +94,14 @@ class MainWindow(QMainWindow):
             }}
             .grid {{
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                 gap: 24px;
             }}
             .section {{
                 background: {bg_alt};
                 border-radius: {radius}px;
                 padding: 20px;
+                overflow: hidden;
             }}
             .section h2 {{
                 font-size: 14px;
@@ -115,14 +116,24 @@ class MainWindow(QMainWindow):
                 gap: 10px;
                 padding: 6px 0;
                 font-size: 14px;
+                min-width: 0;
             }}
             .dot {{
                 width: 6px; height: 6px; border-radius: 50%;
                 background: {accent};
                 flex-shrink: 0;
             }}
-            .row-title {{ flex-shrink: 0; }}
+            .row-title {{
+                flex-shrink: 1;
+                min-width: 0;
+                max-width: 55%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }}
             .row-url {{
+                flex: 1;
+                min-width: 0;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
