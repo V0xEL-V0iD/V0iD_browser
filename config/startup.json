@@ -1,0 +1,6 @@
+{
+    "restore_session": true,
+    "default_workspace": "main",
+    "open_urls_on_startup": [],
+    "workspaces": ["main"]
+}

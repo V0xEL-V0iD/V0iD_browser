@@ -1,0 +1,29 @@
+{
+    "homepage": "void://home",
+    "startup_behavior": "restore_session",
+    "search_engine": "duckduckgo",
+    "hardware_acceleration": true,
+    "smooth_scrolling": true,
+    "animations": true,
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "default_zoom": 1.0,
+    "downloads_folder": "~/Downloads",
+    "restore_previous_session": true,
+    "active_theme": "void",
+    "dark_theme": "void",
+    "force_dark_web_content": true,
+    "vim_mode": true,
+    "privacy": {
+        "do_not_track": true,
+        "disable_telemetry": true,
+        "clear_cache_on_exit": false,
+        "clear_cookies_on_exit": false,
+        "incognito_default": false
+    },
+    "ui": {
+        "popup_width_ratio": 0.5,
+        "popup_max_results": 8,
+        "show_favicons": true
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "name": "Nord",
+    "background": "#2e3440",
+    "background_alt": "#3b4252",
+    "foreground": "#eceff4",
+    "foreground_dim": "#7b88a1",
+    "accent": "#88c0d0",
+    "accent_alt": "#b48ead",
+    "success": "#a3be8c",
+    "warning": "#ebcb8b",
+    "danger": "#bf616a",
+    "border_color": "#4c566a",
+    "border_width": 1,
+    "border_radius": 8,
+    "blur": false,
+    "shadow": true,
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "padding": 10,
+    "animation_duration_ms": 100,
+    "dark": true
+}

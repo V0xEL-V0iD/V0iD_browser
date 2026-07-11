@@ -1,0 +1,22 @@
+{
+    "name": "Omarchy",
+    "background": "#181825",
+    "background_alt": "#1e1e2e",
+    "foreground": "#cdd6f4",
+    "foreground_dim": "#7f849c",
+    "accent": "#89b4fa",
+    "accent_alt": "#f38ba8",
+    "success": "#a6e3a1",
+    "warning": "#f9e2af",
+    "danger": "#f38ba8",
+    "border_color": "#313244",
+    "border_width": 2,
+    "border_radius": 10,
+    "blur": true,
+    "shadow": true,
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "padding": 10,
+    "animation_duration_ms": 100,
+    "dark": true
+}

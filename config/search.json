@@ -1,0 +1,35 @@
+{
+    "default": "duckduckgo",
+    "engines": {
+        "duckduckgo": {
+            "name": "DuckDuckGo",
+            "url": "https://duckduckgo.com/?q={query}",
+            "suggest_url": "https://duckduckgo.com/ac/?q={query}&type=list"
+        },
+        "brave": {
+            "name": "Brave Search",
+            "url": "https://search.brave.com/search?q={query}",
+            "suggest_url": ""
+        },
+        "google": {
+            "name": "Google",
+            "url": "https://www.google.com/search?q={query}",
+            "suggest_url": "https://suggestqueries.google.com/complete/search?client=firefox&q={query}"
+        },
+        "bing": {
+            "name": "Bing",
+            "url": "https://www.bing.com/search?q={query}",
+            "suggest_url": ""
+        },
+        "kagi": {
+            "name": "Kagi",
+            "url": "https://kagi.com/search?q={query}",
+            "suggest_url": ""
+        },
+        "startpage": {
+            "name": "Startpage",
+            "url": "https://www.startpage.com/sp/search?query={query}",
+            "suggest_url": ""
+        }
+    }
+}

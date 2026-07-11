@@ -1,0 +1,22 @@
+{
+    "name": "Void",
+    "background": "#0d0d12",
+    "background_alt": "#15151d",
+    "foreground": "#e6e6f0",
+    "foreground_dim": "#8a8a9a",
+    "accent": "#9d7bff",
+    "accent_alt": "#ff7bd4",
+    "success": "#7bffb0",
+    "warning": "#ffd27b",
+    "danger": "#ff7b7b",
+    "border_color": "#2a2a38",
+    "border_width": 1,
+    "border_radius": 14,
+    "blur": true,
+    "shadow": true,
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "padding": 12,
+    "animation_duration_ms": 120,
+    "dark": true
+}

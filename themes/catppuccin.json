@@ -1,0 +1,22 @@
+{
+    "name": "Catppuccin Mocha",
+    "background": "#1e1e2e",
+    "background_alt": "#181825",
+    "foreground": "#cdd6f4",
+    "foreground_dim": "#9399b2",
+    "accent": "#cba6f7",
+    "accent_alt": "#f5c2e7",
+    "success": "#a6e3a1",
+    "warning": "#f9e2af",
+    "danger": "#f38ba8",
+    "border_color": "#313244",
+    "border_width": 1,
+    "border_radius": 16,
+    "blur": true,
+    "shadow": true,
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 14,
+    "padding": 12,
+    "animation_duration_ms": 140,
+    "dark": true
+}
