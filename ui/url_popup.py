@@ -33,6 +33,8 @@ class UrlPopup(FloatingPopup):
 
         self.results = QListWidget()
         self.results.itemActivated.connect(self._on_item_activated)
+        self.results.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.results.setWordWrap(False)
 
         self.layout_.addWidget(self.input)
         self.layout_.addWidget(self.results)
@@ -70,7 +72,7 @@ class UrlPopup(FloatingPopup):
 
     def _add_item(self, label: str, value: str, kind: str) -> None:
         icon = {"go": "→", "search": "🔍", "bookmark": "★", "history": "🕑", "recent": "🕑"}.get(kind, "•")
-        item = QListWidgetItem(f"{icon}  {label}")
+        item = QListWidgetItem(f"{icon}  {shorten(label)}")
         item.setData(Qt.ItemDataRole.UserRole, (kind, value))
         self.results.addItem(item)
 
