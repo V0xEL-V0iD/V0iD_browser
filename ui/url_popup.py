@@ -12,7 +12,7 @@ from typing import Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem
 
-from popup import FloatingPopup
+from popup import FloatingPopup, shorten
 
 
 class UrlPopup(FloatingPopup):

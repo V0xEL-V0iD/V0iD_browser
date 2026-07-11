@@ -10,7 +10,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem
 
-from popup import FloatingPopup
+from popup import FloatingPopup, shorten
 from tabs import TabManager
 
 
@@ -26,6 +26,8 @@ class TabPopup(FloatingPopup):
 
         self.results = QListWidget()
         self.results.itemActivated.connect(self._on_item_activated)
+        self.results.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.results.setWordWrap(False)
 
         self.layout_.addWidget(self.input)
         self.layout_.addWidget(self.results)
@@ -36,25 +38,25 @@ class TabPopup(FloatingPopup):
         self.show_animated()
         self.input.setFocus()
 
-def _filter(self, text: str) -> None:
-    self.results.clear()
-    q = text.lower().strip()
-    for i, tab in enumerate(self.tab_manager.tabs):
-        if q and q not in tab.title.lower() and q not in tab.url.lower():
-            continue
-        pin = "📌 " if tab.pinned else ""
-        audio = "🔊 " if tab.audio else ""
-        item = QListWidgetItem(f"{pin}{audio}{shorten(tab.title, 30)}  —  {shorten(tab.url)}")
-        item.setData(Qt.ItemDataRole.UserRole, i)
-        self.results.addItem(item)
-    current = self.tab_manager.active_index()
-    for row in range(self.results.count()):
-        if self.results.item(row).data(Qt.ItemDataRole.UserRole) == current:
-            self.results.setCurrentRow(row)
-            break
-    else:
-        if self.results.count():
-            self.results.setCurrentRow(0)
+    def _filter(self, text: str) -> None:
+        self.results.clear()
+        q = text.lower().strip()
+        for i, tab in enumerate(self.tab_manager.tabs):
+            if q and q not in tab.title.lower() and q not in tab.url.lower():
+                continue
+            pin = "📌 " if tab.pinned else ""
+            audio = "🔊 " if tab.audio else ""
+            item = QListWidgetItem(f"{pin}{audio}{shorten(tab.title, 30)}  —  {shorten(tab.url)}")
+            item.setData(Qt.ItemDataRole.UserRole, i)
+            self.results.addItem(item)
+        current = self.tab_manager.active_index()
+        for row in range(self.results.count()):
+            if self.results.item(row).data(Qt.ItemDataRole.UserRole) == current:
+                self.results.setCurrentRow(row)
+                break
+        else:
+            if self.results.count():
+                self.results.setCurrentRow(0)
 
     def _selected_index(self) -> int | None:
         item = self.results.currentItem()

@@ -11,7 +11,7 @@ from typing import Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QListWidget, QListWidgetItem, QComboBox, QPushButton, QHBoxLayout
 
-from popup import FloatingPopup
+from popup import FloatingPopup, shorten
 from history import HistoryManager
 
 BUCKETS = ["Search", "Today", "Yesterday", "Last Week", "Most Visited"]

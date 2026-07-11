@@ -13,13 +13,14 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QGraphicsOpacityEffect
 
 
+def shorten(text: str, max_len: int = 45) -> str:
+    """Truncate long text with an ellipsis so it never overflows a popup row."""
+    return text if len(text) <= max_len else text[:max_len - 1] + "…"
+
+
 class FloatingPopup(QWidget):
     """A frameless, centered, semi-transparent floating window."""
-    
-    def shorten(text: str, max_len: int = 45) -> str:
-        """Truncate long text with an ellipsis so it never overflows a popup row."""
-        return text if len(text) <= max_len else text[:max_len - 1] + "…"
-    
+
     def __init__(self, parent: QWidget | None, width_ratio: float = 0.5,
                  height: int | None = None, anchor: str = "center") -> None:
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
