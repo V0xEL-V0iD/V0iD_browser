@@ -54,17 +54,28 @@ class BookmarkPopup(FloatingPopup):
             entries = self.bookmark_manager.all()
         else:
             entries = self.bookmark_manager.by_category(category)
-
+    
         q = text.lower().strip()
         for entry in entries:
             if q and q not in entry["title"].lower() and q not in entry["url"].lower():
                 continue
             star = "★ " if entry.get("favorite") else ""
-            item = QListWidgetItem(f"{star}{entry['title']}  —  {entry['url']}")
+            item = QListWidgetItem(f"{star}{shorten(entry['title'], 30)}  —  {shorten(entry['url'])}")
             item.setData(Qt.ItemDataRole.UserRole, entry["url"])
             self.results.addItem(item)
         if self.results.count():
             self.results.setCurrentRow(0)
+    
+            q = text.lower().strip()
+            for entry in entries:
+                if q and q not in entry["title"].lower() and q not in entry["url"].lower():
+                    continue
+                star = "★ " if entry.get("favorite") else ""
+                item = QListWidgetItem(f"{star}{entry['title']}  —  {entry['url']}")
+                item.setData(Qt.ItemDataRole.UserRole, entry["url"])
+                self.results.addItem(item)
+            if self.results.count():
+                self.results.setCurrentRow(0)
 
     def _activate_current(self) -> None:
         self._on_item_activated(self.results.currentItem())
