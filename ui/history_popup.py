@@ -54,7 +54,7 @@ class HistoryPopup(FloatingPopup):
         self.results.clear()
         bucket = self.bucket_box.currentText()
         q = text.strip()
-
+    
         if q:
             entries = self.history_manager.search(q, limit=50)
         elif bucket == "Today":
@@ -67,10 +67,10 @@ class HistoryPopup(FloatingPopup):
             entries = self.history_manager.most_visited(30)
         else:
             entries = self.history_manager.recent(50)
-
+    
         for entry in entries:
             title = entry.get("title") or entry["url"]
-            item = QListWidgetItem(f"{title}  —  {entry['url']}")
+            item = QListWidgetItem(f"{shorten(title, 30)}  —  {shorten(entry['url'])}")
             item.setData(Qt.ItemDataRole.UserRole, entry["url"])
             self.results.addItem(item)
         if self.results.count():
