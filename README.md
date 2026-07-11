@@ -1,6 +1,4 @@
-<img width="1773" height="867" alt="screenshot-2026-07-11_21-45-44" src="https://github.com/user-attachments/assets/b66bf470-5e95-4c24-a804-be824a57067c" />
-<img width="1833" height="936" alt="screenshot-2026-07-11_21-44-54" src="https://github.com/user-attachments/assets/399ca439-0a19-48a6-bd07-6eb6e9214a75" />
-<img width="604" height="781" alt="screenshot-2026-07-11_21-48-58" src="https://github.com/user-attachments/assets/abc932e0-0457-4fe0-b72d-1f23b460737f" />
+
 # VoidBrowser
 
 A keyboard-first web browser built with Python + PySide6 (Qt WebEngine),
@@ -134,6 +132,8 @@ places to extend:
 - **Website permissions manager** and **incognito profile isolation**
   are represented as a settings toggle; a fully isolated
   `QWebEngineProfile` for incognito tabs is a natural next step.
-- I could not execute-test this in the sandbox (no network access to
-  install PySide6 here), so please run it locally and report back any
-  tracebacks — happy to fix.
+
+  
+<img width="1773" height="867" alt="screenshot-2026-07-11_21-45-44" src="https://github.com/user-attachments/assets/b66bf470-5e95-4c24-a804-be824a57067c" />
+<img width="1833" height="936" alt="screenshot-2026-07-11_21-44-54" src="https://github.com/user-attachments/assets/399ca439-0a19-48a6-bd07-6eb6e9214a75" />
+<img width="604" height="781" alt="screenshot-2026-07-11_21-48-58" src="https://github.com/user-attachments/assets/abc932e0-0457-4fe0-b72d-1f23b460737f" />
