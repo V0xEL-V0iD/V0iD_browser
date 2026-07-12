@@ -144,6 +144,12 @@ class Browser:
                     is_dark = bool(self.settings.get("force_dark_web_content", True)) and \
                         bool(self.theme_manager.value("dark", True))
                     page.settings().setAttribute(attr, is_dark)
+
+                fs_attr = getattr(QWebEngineSettings.WebAttribute, "FullScreenSupportEnabled", None)
+                if fs_attr is not None:
+                    page.settings().setAttribute(fs_attr, True)
+
+        
         view.urlChanged.connect(lambda url, v=view: self._on_url_changed(v, url))
         return view
 
@@ -362,6 +368,20 @@ class Browser:
             self.window.showNormal()
         else:
             self.window.showFullScreen()
+
+    def _on_page_fullscreen_requested(self, request) -> None:
+        """Answer a web page's request to go fullscreen (e.g. YouTube's
+        own fullscreen button), which Qt WebEngine otherwise silently
+        refuses unless something explicitly accepts it."""
+        request.accept()
+        if request.toggleOn():
+            self._was_maximized_before_fullscreen = self.window.isMaximized()
+            self.window.showFullScreen()
+        else:
+            if getattr(self, "_was_maximized_before_fullscreen", False):
+                self.window.showMaximized()
+            else:
+                self.window.showNormal()
 
     # -- vim mode --------------------------------------------------------
     def _build_vim_actions(self) -> dict:
