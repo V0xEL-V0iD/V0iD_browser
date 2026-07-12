@@ -31,6 +31,12 @@ run:
 ```bash
 ./setup.sh
 ```
+## run as python (windows/Linux)
+
+run:
+```python
+python main.py
+```
 
 ## Default keyboard shortcuts
 
