@@ -149,7 +149,8 @@ class Browser:
                 if fs_attr is not None:
                     page.settings().setAttribute(fs_attr, True)
 
-        
+            page.fullScreenRequested.connect(self._on_page_fullscreen_requested)
+
         view.urlChanged.connect(lambda url, v=view: self._on_url_changed(v, url))
         return view
 
