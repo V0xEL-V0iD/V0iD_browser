@@ -46,7 +46,9 @@ class TabPopup(FloatingPopup):
                 continue
             pin = "📌 " if tab.pinned else ""
             audio = "🔊 " if tab.audio else ""
-            item = QListWidgetItem(f"{pin}{audio}{shorten(tab.title, 30)}  —  {shorten(tab.url)}")
+            tab_title = shorten(tab.title, 25)
+            tab_url = shorten(tab.url, 25)
+            item = QListWidgetItem(f"{pin}{audio}{tab_title}  —  {tab_url}")
             item.setData(Qt.ItemDataRole.UserRole, i)
             self.results.addItem(item)
         current = self.tab_manager.active_index()

@@ -1,1 +1,15 @@
-{"workspaces": {"main": {"tabs": [], "active_index": 0}}, "active_workspace": "main"}
+{
+  "workspaces": {
+    "main": {
+      "tabs": [
+        {
+          "url": "https://pythonguides.com/print-a-string-and-variable-in-python/",
+          "title": "Mastering Python Print: Variables, Formatting & Output Methods",
+          "pinned": false
+        }
+      ],
+      "active_index": 0
+    }
+  },
+  "active_workspace": "main"
+}

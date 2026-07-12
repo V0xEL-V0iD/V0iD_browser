@@ -45,13 +45,22 @@ class MainWindow(QMainWindow):
         radius = theme.get("border_radius", 14)
         font = theme.get("font_family", "sans-serif")
 
+        def _title_and_url(item) -> tuple[str, str]:
+            """Normalize a section entry that may be a dict (bookmarks, history)
+            or a plain URL string (recently_closed) into (title, url)."""
+            if isinstance(item, dict):
+                url = item.get("url", "")
+                title = item.get("title") or url
+                return title, url
+            return str(item), str(item)
+
         def section(title: str, items: list, empty_msg: str) -> str:
             if not items:
                 return f'<div class="section"><h2>{title}</h2><p class="dim">{empty_msg}</p></div>'
             rows = "".join(
                 f'<div class="row"><span class="dot"></span>'
-                f'<span class="row-title">{_esc(i.get("title") or i.get("url", i))}</span>'
-                f'<span class="row-url dim">{_esc(i.get("url", i) if isinstance(i, dict) else i)}</span></div>'
+                f'<span class="row-title">{_esc(_title_and_url(i)[0])}</span>'
+                f'<span class="row-url dim">{_esc(_title_and_url(i)[1])}</span></div>'
                 for i in items[:6]
             )
             return f'<div class="section"><h2>{title}</h2>{rows}</div>'
