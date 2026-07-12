@@ -23,12 +23,23 @@ class WorkspaceManager:
         self.load()
 
     def load(self) -> None:
-        if self.path.exists():
-            with open(self.path, "r", encoding="utf-8") as fh:
-                self._data = json.load(fh)
+        default = {"workspaces": {"main": {"tabs": [], "active_index": 0}},
+                   "active_workspace": "main"}
+        if not self.path.exists():
+            self._data = default
+            return
+        with open(self.path, "r", encoding="utf-8") as fh:
+            try:
+                loaded = json.load(fh)
+            except json.JSONDecodeError:
+                loaded = None
+        # sessions.json must be an object with a "workspaces" dict -- anything
+        # else (empty list, wrong shape, corrupted file) falls back to the
+        # default rather than crashing every downstream call.
+        if isinstance(loaded, dict) and isinstance(loaded.get("workspaces"), dict) and loaded["workspaces"]:
+            self._data = loaded
         else:
-            self._data = {"workspaces": {"main": {"tabs": [], "active_index": 0}},
-                           "active_workspace": "main"}
+            self._data = default
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

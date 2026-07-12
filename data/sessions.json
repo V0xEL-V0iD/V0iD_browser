@@ -1,1 +1,15 @@
-[]
+{
+  "workspaces": {
+    "main": {
+      "tabs": [
+        {
+          "url": "void://home",
+          "title": "void://home",
+          "pinned": false
+        }
+      ],
+      "active_index": 0
+    }
+  },
+  "active_workspace": "main"
+}
