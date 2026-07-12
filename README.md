@@ -25,10 +25,11 @@ pip install -r requirements.txt
 > https://doc.qt.io/qtforpython-6/gettingstarted.html if the app fails
 > to launch with a missing-library error.
 
-## Run
+## desktop entry setup (Linux)
 
+run:
 ```bash
-python main.py
+./setup.sh
 ```
 
 ## Default keyboard shortcuts
