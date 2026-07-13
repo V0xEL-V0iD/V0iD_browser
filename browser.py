@@ -38,6 +38,9 @@ from ui.bookmark_popup import BookmarkPopup
 from ui.history_popup import HistoryPopup
 from ui.downloads_popup import DownloadsPopup
 from ui.settings_popup import SettingsPopup
+from ui.find_popup import FindPopup
+
+from link_hints import LINK_HINTS_JS
 
 
 class VimMode(QObject):
@@ -101,10 +104,12 @@ class Browser:
         self.window = MainWindow()
         self.shortcuts = ShortcutManager(self.window)
 
-        self.profile = QWebEngineProfile.defaultProfile() if QWebEngineProfile else None
-        if self.profile is not None:
-            self.profile.downloadRequested.connect(self.download_manager.handle_download)
-            self.profile.setHttpAcceptLanguage("en-US,en")
+        # Normal browsing uses a NAMED, persistent profile so cookies, logins,
+        # and cache survive restarts like a real browser. Qt6's defaultProfile()
+        # is off-the-record, so using it (as before) silently discarded every
+        # session AND made "incognito" indistinguishable from normal browsing.
+        self.profile = self._build_persistent_profile()
+        self._incognito_profile = None  # lazily created off-the-record profile
 
         self.tab_manager = TabManager(self._create_web_view, home_html_provider=self._home_html)
         self.window.attach_tab_manager(self.tab_manager)
@@ -131,12 +136,60 @@ class Browser:
         if loaded:
             print(f"[VoidBrowser] Loaded plugins: {', '.join(loaded)}")
 
+    # -- profiles ----------------------------------------------------------
+    def _build_persistent_profile(self):
+        """Create the on-disk profile used for normal (non-incognito) tabs."""
+        if QWebEngineProfile is None:
+            return None
+        profile = QWebEngineProfile("void-persistent", self.app)
+        self._configure_profile(profile)
+        return profile
+
+    def _ensure_incognito_profile(self):
+        """Lazily create the off-the-record profile used for incognito tabs.
+        An unnamed QWebEngineProfile keeps cookies, cache, and browsing data in
+        memory only and wipes everything when it is destroyed."""
+        if self._incognito_profile is None and QWebEngineProfile is not None:
+            profile = QWebEngineProfile(self.app)  # no storage name => off-the-record
+            self._configure_profile(profile)
+            self._incognito_profile = profile
+        return self._incognito_profile
+
+    def _configure_profile(self, profile) -> None:
+        profile.downloadRequested.connect(self.download_manager.handle_download)
+        profile.setHttpAcceptLanguage("en-US,en")
+        self._install_link_hints_script(profile)
+
+    def _install_link_hints_script(self, profile) -> None:
+        """Inject the Vimium-style link-hints content script into every page
+        this profile loads. The trigger key is read from the user's Vim
+        bindings so rebinding `link_hints` in shortcuts.json just works."""
+        try:
+            from PySide6.QtWebEngineCore import QWebEngineScript
+        except ImportError:  # pragma: no cover
+            return
+        trigger = self.shortcuts.vim_bindings().get("link_hints", "f")
+        script = QWebEngineScript()
+        script.setName("void_link_hints")
+        script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady)
+        script.setWorldId(QWebEngineScript.ScriptWorldId.ApplicationWorld)
+        script.setRunsOnSubFrames(True)
+        script.setSourceCode(LINK_HINTS_JS.replace("__TRIGGER_KEY__", trigger))
+        profile.scripts().insert(script)
+
+    def _profile_for_new_view(self):
+        """Pick the profile a new tab should use, based on incognito mode."""
+        if bool(self.settings.get("privacy.incognito_default", False)):
+            return self._ensure_incognito_profile()
+        return self.profile
+
     # -- web view factory --------------------------------------------------
     def _create_web_view(self) -> "QWebEngineView":
         view = QWebEngineView()
-        if self.profile is not None:
+        profile = self._profile_for_new_view()
+        if profile is not None:
             from PySide6.QtWebEngineCore import QWebEnginePage
-            page = QWebEnginePage(self.profile, view)
+            page = QWebEnginePage(profile, view)
             view.setPage(page)
             if QWebEngineSettings is not None:
                 attr = getattr(QWebEngineSettings.WebAttribute, "ForceDarkMode", None)
@@ -150,20 +203,47 @@ class Browser:
                     page.settings().setAttribute(fs_attr, True)
 
             page.fullScreenRequested.connect(self._on_page_fullscreen_requested)
+            page.newWindowRequested.connect(self._on_new_window_requested)
 
         view.urlChanged.connect(lambda url, v=view: self._on_url_changed(v, url))
         return view
 
+    def _on_new_window_requested(self, request) -> None:
+        """Open target=_blank links, window.open() calls, middle-clicks, and the
+        `F` link-hint in a new tab instead of silently dropping them (which is
+        what happened before -- QWebEnginePage refuses new windows unless a
+        handler adopts the request)."""
+        background = False
+        try:
+            from PySide6.QtWebEngineCore import QWebEngineNewWindowRequest
+            background = (request.destination() ==
+                          QWebEngineNewWindowRequest.DestinationType.InNewBackgroundTab)
+        except Exception:  # pragma: no cover - tolerate API differences
+            pass
+        index = self.tab_manager.new_tab(url="", focus=not background)
+        view = self.tab_manager.tabs[index].view
+        request.openIn(view.page())
+
     def _on_url_changed(self, view, url: QUrl) -> None:
         url_str = url.toString()
-        if url_str and not url_str.startswith("void://"):
-            self.history_manager.visit(url_str, view.title())
+        if not url_str or url_str.startswith("void://"):
+            return
+        # Never record incognito browsing to on-disk history.
+        if self._view_is_incognito(view):
+            return
+        self.history_manager.visit(url_str, view.title())
+
+    @staticmethod
+    def _view_is_incognito(view) -> bool:
+        page = view.page() if view is not None else None
+        return bool(page is not None and page.profile().isOffTheRecord())
 
     def _sync_window_title(self) -> None:
         view = self.tab_manager.active_view()
         if view is not None:
             title = view.title() or "VoidBrowser"
-            self.window.setWindowTitle(f"{title} — VoidBrowser")
+            suffix = "  ·  Incognito" if self._view_is_incognito(view) else ""
+            self.window.setWindowTitle(f"{title} — VoidBrowser{suffix}")
 
     # -- homepage ------------------------------------------------------
     def _home_html(self) -> str:
@@ -206,6 +286,8 @@ class Browser:
 
     # -- popups ------------------------------------------------------------
     def _build_popups(self) -> None:
+        self._last_find_query = ""
+        self.find_popup = FindPopup(self.window, self._do_find, self._clear_find)
         self.url_popup = UrlPopup(
             self.window, self.history_manager, self.bookmark_manager,
             self.search_manager, self.navigate,
@@ -255,6 +337,11 @@ class Browser:
         cmd("go_back", "Back", self._go_back, "Navigation", "back")
         cmd("go_forward", "Forward", self._go_forward, "Navigation", "forward")
         cmd("go_home", "Go Home", self.go_home, "Navigation")
+        cmd("find_in_page", "Find in Page", self._find_in_page, "Navigation", "find_in_page")
+
+        cmd("zoom_in", "Zoom In", self._zoom_in, "View", "zoom_in")
+        cmd("zoom_out", "Zoom Out", self._zoom_out, "View", "zoom_out")
+        cmd("zoom_reset", "Reset Zoom", self._zoom_reset, "View", "zoom_reset")
 
         cmd("open_bookmarks", "Bookmarks", self.bookmark_popup.open, "Data", "bookmarks")
         cmd("add_bookmark", "Bookmark This Page", self._bookmark_current, "Data", "add_bookmark")
@@ -301,6 +388,69 @@ class Browser:
         if view:
             view.forward()
 
+    # -- zoom ------------------------------------------------------------
+    ZOOM_STEP = 1.1
+    ZOOM_MIN = 0.25
+    ZOOM_MAX = 5.0
+
+    def _zoom_by(self, factor: float) -> None:
+        view = self.tab_manager.active_view()
+        if view is None:
+            return
+        new = max(self.ZOOM_MIN, min(self.ZOOM_MAX, view.zoomFactor() * factor))
+        view.setZoomFactor(new)
+
+    def _zoom_in(self) -> None:
+        self._zoom_by(self.ZOOM_STEP)
+
+    def _zoom_out(self) -> None:
+        self._zoom_by(1 / self.ZOOM_STEP)
+
+    def _zoom_reset(self) -> None:
+        view = self.tab_manager.active_view()
+        if view is not None:
+            view.setZoomFactor(1.0)
+
+    # -- find in page ----------------------------------------------------
+    def _find_in_page(self, prefill: str = "") -> None:
+        self.find_popup.open(prefill)
+
+    def _do_find(self, text: str, backward: bool = False) -> None:
+        view = self.tab_manager.active_view()
+        if view is None:
+            return
+        page = view.page()
+        text = text or ""
+        self._last_find_query = text
+        if not text:
+            page.findText("")
+            self.find_popup.set_count(0, 0)
+            return
+        from PySide6.QtWebEngineCore import QWebEnginePage
+        flags = QWebEnginePage.FindFlag.FindBackward if backward else QWebEnginePage.FindFlag(0)
+        page.findText(text, flags, self._on_find_result)
+
+    def _on_find_result(self, result) -> None:
+        try:
+            total = result.numberOfMatches()
+            active = result.activeMatch()
+        except AttributeError:  # older Qt: callback gets a bool
+            total, active = (1, 1) if result else (0, 0)
+        self.find_popup.set_count(active, total)
+
+    def _clear_find(self) -> None:
+        view = self.tab_manager.active_view()
+        if view is not None:
+            view.page().findText("")
+
+    def _find_next(self) -> None:
+        if self._last_find_query:
+            self._do_find(self._last_find_query, backward=False)
+
+    def _find_prev(self) -> None:
+        if self._last_find_query:
+            self._do_find(self._last_find_query, backward=True)
+
     def _toggle_pin_active_tab(self) -> None:
         idx = self.tab_manager.active_index()
         if 0 <= idx < len(self.tab_manager.tabs):
@@ -345,8 +495,15 @@ class Browser:
         self.settings.set("vim_mode", not current)
 
     def _toggle_incognito(self) -> None:
-        current = bool(self.settings.get("privacy.incognito_default", False))
-        self.settings.set("privacy.incognito_default", not current)
+        """Flip incognito mode and open a fresh tab in the new mode so the
+        change is immediately visible. New tabs opened while incognito is on
+        use the off-the-record profile; existing tabs keep their profile."""
+        enabled = not bool(self.settings.get("privacy.incognito_default", False))
+        self.settings.set("privacy.incognito_default", enabled)
+        if enabled:
+            self._ensure_incognito_profile()
+        self.tab_manager.new_tab(url=self.settings.get("homepage", "void://home"))
+        self._sync_window_title()
 
     def _clear_cache(self) -> None:
         if self.profile is not None:
@@ -425,7 +582,13 @@ class Browser:
             v.get("tab_popup", "t"): self.tab_popup.open,
             v.get("bookmarks", "b"): self.bookmark_popup.open,
             v.get("reload", "r"): self._reload,
+            v.get("search_page", "/"): self._find_in_page,
+            v.get("next_result", "n"): self._find_next,
+            v.get("prev_result", "N"): self._find_prev,
         }
+        # NOTE: link_hints (`f`) is intentionally absent -- it is handled by an
+        # injected page script (see _install_link_hints_script), not Qt, so it
+        # works even when the web view has keyboard focus.
 
     # -- shortcut binding --------------------------------------------------
     def _bind_shortcuts(self) -> None:
@@ -442,6 +605,10 @@ class Browser:
             "prev_tab": self.tab_manager.prev_tab,
             "reload": self._reload,
             "hard_reload": self._hard_reload,
+            "find_in_page": self._find_in_page,
+            "zoom_in": self._zoom_in,
+            "zoom_out": self._zoom_out,
+            "zoom_reset": self._zoom_reset,
             "bookmarks": self.bookmark_popup.open,
             "add_bookmark": self._bookmark_current,
             "history": self.history_popup.open,
@@ -476,9 +643,11 @@ class Browser:
             self.tab_manager.set_active(min(active_index, self.tab_manager.count() - 1))
 
     def _save_session(self) -> None:
+        # Incognito tabs are deliberately excluded so their URLs never touch disk.
         tabs = [
             {"url": t.url, "title": t.title, "pinned": t.pinned}
             for t in self.tab_manager.tabs
+            if not self._view_is_incognito(t.view)
         ]
         self.workspace_manager.save_tabs(
             self.workspace_manager.active_workspace_name, tabs, self.tab_manager.active_index()
