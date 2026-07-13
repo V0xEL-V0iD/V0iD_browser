@@ -63,11 +63,25 @@ class TabManager(QObject):
         self.tabs.append(info)
         index = len(self.tabs) - 1
         self.stack.addWidget(view)
-        view.titleChanged.connect(lambda _t, i=index: self.tab_title_changed.emit(i))
+        # Resolve the tab's *live* index by identity when the title changes --
+        # capturing `index` here would go stale as soon as a tab is closed or moved.
+        view.titleChanged.connect(lambda _t, v=view: self._on_title_changed(v))
         self.tab_added.emit(index)
         if focus:
             self.set_active(index)
         return index
+
+    def index_of_view(self, view) -> int:
+        """Return the current index of the tab backing `view`, or -1 if gone."""
+        for i, tab in enumerate(self.tabs):
+            if tab.view is view:
+                return i
+        return -1
+
+    def _on_title_changed(self, view) -> None:
+        index = self.index_of_view(view)
+        if index >= 0:
+            self.tab_title_changed.emit(index)
 
     def close_tab(self, index: int) -> None:
         if not (0 <= index < len(self.tabs)):
